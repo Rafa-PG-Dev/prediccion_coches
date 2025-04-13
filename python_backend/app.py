@@ -4,19 +4,24 @@ import pandas as pd
 
 app = Flask(__name__)
 
-# Cargar modelo y encoder
+# Cargar el modelo y los encoders
 try:
     with open('assets/model.pkl', 'rb') as f:
         model = pickle.load(f)
 
-    with open('assets/encoder.pkl', 'rb') as f:
-        encoder = pickle.load(f)
+    with open('assets/encoder_make_model.pkl', 'rb') as f:
+        encoder_make_model = pickle.load(f)
+
+    with open('assets/encoder_fuel_shift.pkl', 'rb') as f:
+        encoder_fuel_shift = pickle.load(f)
+    
 except Exception as e:
     print(f"Error al cargar los archivos: {e}")
-    model, encoder = None, None
+    model, encoder_make_model, encoder_fuel_shift = None, None, None
 
-categorical_features = ['make', 'model', 'fuel', 'shift', 'color', 'province']
-numeric_features = ['year', 'kms', 'power', 'doors', 'is_professional']
+# Características categóricas y numéricas
+categorical_features = ['make', 'model', 'fuel', 'shift']
+numeric_features = ['year', 'kms', 'power', 'doors']
 
 # Ruta de prueba para verificar que la API está funcionando
 @app.route('/', methods=['GET'])
@@ -25,7 +30,7 @@ def home():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    if model is None or encoder is None:
+    if model is None or encoder_make_model is None or encoder_fuel_shift is None:
         return jsonify({"error": "Modelo o encoder no cargados correctamente"}), 500
     
     try:
@@ -38,13 +43,22 @@ def predict():
         # Crear un DataFrame a partir de la entrada
         df_input = pd.DataFrame([input_data])
 
-        # Codificar las columnas categóricas
-        encoded_input = encoder.transform(df_input[categorical_features])
-        encoded_columns = encoder.get_feature_names_out(categorical_features)
-        encoded_df = pd.DataFrame(encoded_input, columns=encoded_columns)
+        # Codificar las columnas categóricas (make, model)
+        X_encoded_make_model = encoder_make_model.transform(df_input[['make', 'model']])
+        encoded_columns_make_model = encoder_make_model.get_feature_names_out(['make', 'model'])
+        X_encoded_df_make_model = pd.DataFrame(X_encoded_make_model, columns=encoded_columns_make_model)
 
-        # Concatenar las columnas numéricas con las categóricas codificadas
-        final_input = pd.concat([encoded_df.reset_index(drop=True), df_input[numeric_features].reset_index(drop=True)], axis=1)
+        # Codificar las columnas fuel y shift
+        X_encoded_fuel_shift = encoder_fuel_shift.transform(df_input[['fuel', 'shift']])
+        encoded_columns_fuel_shift = encoder_fuel_shift.get_feature_names_out(['fuel', 'shift'])
+        X_encoded_df_fuel_shift = pd.DataFrame(X_encoded_fuel_shift, columns=encoded_columns_fuel_shift)
+
+        # Concatenar las columnas codificadas con las numéricas
+        final_input = pd.concat([ 
+            df_input[numeric_features].reset_index(drop=True),
+            X_encoded_df_make_model.reset_index(drop=True),
+            X_encoded_df_fuel_shift.reset_index(drop=True)
+        ], axis=1)
 
         # Realizar la predicción
         prediction = model.predict(final_input)

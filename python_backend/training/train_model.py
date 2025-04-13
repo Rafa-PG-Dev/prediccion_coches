@@ -11,17 +11,26 @@ import os
 df = pd.read_csv('assets/coches_data_cleaned.csv')
 
 # ===============================
-# 2. Definir variables X (features) e y (target)
+# 2. Filtrar marcas con pocos registros (menos de 50 registros)
+# ===============================
+marca_counts = df['make'].value_counts()
+umbral = 50
+marcas_validas = marca_counts[marca_counts >= umbral].index
+df = df[df['make'].isin(marcas_validas)]
+
+# ===============================
+# 3. Definir variables X (features) e y (target)
 # ===============================
 X = df[['make', 'model', 'fuel', 'year', 'kms', 'power', 'doors', 'shift']]  # is_professional eliminado si no se usó
 y = df['price']
 
-# 3. Crear el encoder SIN definir manualmente las categorías
+# ===============================
+# 4. Crear el encoder SIN definir manualmente las categorías
+# ===============================
 encoder = OneHotEncoder(
     handle_unknown='ignore',
     sparse_output=False
 )
-
 
 X_encoded_fuel_shift = encoder.fit_transform(X[['fuel', 'shift']])
 encoded_columns_fuel_shift = encoder.get_feature_names_out(['fuel', 'shift'])
@@ -38,7 +47,7 @@ X_encoded_df_make_model = pd.DataFrame(X_encoded_make_model, columns=encoded_col
 # ===============================
 # 6. Concatenar todas las columnas
 # ===============================
-X_final = pd.concat([
+X_final = pd.concat([ 
     X[['year', 'kms', 'power', 'doors']].reset_index(drop=True),
     X_encoded_df_make_model.reset_index(drop=True),
     X_encoded_df_fuel_shift.reset_index(drop=True)
