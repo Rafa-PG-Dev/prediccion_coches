@@ -17,7 +17,7 @@ input_data = {
     "kms": 50000,
     "power": 150,
     "doors": 4,
-    "shift": "automatico",
+    "shift": "manual",
     "color": "negro",
     "is_professional": True,
     "province": "madrid"
