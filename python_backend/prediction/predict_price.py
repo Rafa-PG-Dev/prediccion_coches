@@ -1,57 +1,40 @@
 import pandas as pd
 import pickle
-from sklearn.preprocessing import OneHotEncoder
 
-# Cargar el modelo entrenado y el encoder
+# Cargar el modelo entrenado y los encoders
 with open('assets/model.pkl', 'rb') as f:
     model = pickle.load(f)
-with open('assets/encoder.pkl', 'rb') as f:
-    encoder = pickle.load(f)
 
-# Definir las categorías posibles de 'fuel' y 'shift' según el entrenamiento
-fuel_categories = ['Petrol', 'Diesel', 'Electric', 'Hybrid']  # Ajusta según las categorías utilizadas en el entrenamiento
-shift_categories = ['Manual', 'Automatic']  # Ajusta según las categorías utilizadas en el entrenamiento
+with open('assets/encoder_make_model.pkl', 'rb') as f:
+    encoder_make_model = pickle.load(f)
 
-# Función para predecir el precio de un coche
+with open('assets/encoder_fuel_shift.pkl', 'rb') as f:
+    encoder_fuel_shift = pickle.load(f)
+
 def predict_price(input_data):
-    # Convertir input_data a un DataFrame
-    input_df = pd.DataFrame([input_data], columns=['make', 'model', 'fuel', 'year', 'kms', 'power', 'doors', 'shift'])
+    # Crear DataFrame a partir del input
+    input_df = pd.DataFrame([input_data])
 
-    # Asegurarse de que las columnas 'make' y 'model' están en el encoder si es necesario
-    categorical_columns = ['make', 'model', 'fuel', 'shift']
-    
-    # Codificar las columnas categóricas (incluyendo make y model si es necesario)
-    X_encoded = encoder.transform(input_df[categorical_columns])
+    # Separar las columnas categóricas y numéricas
+    categorical_cols = ['fuel', 'shift', 'make', 'model']
+    numerical_cols = [col for col in input_df.columns if col not in categorical_cols]
 
-    # Crear DataFrame con columnas codificadas
-    encoded_columns = encoder.get_feature_names_out(categorical_columns)
-    X_encoded_df = pd.DataFrame(X_encoded, columns=encoded_columns)
+    # Codificar las columnas categóricas
+    X_encoded_fuel_shift = encoder_fuel_shift.transform(input_df[['fuel', 'shift']])
+    encoded_cols_fuel_shift = encoder_fuel_shift.get_feature_names_out(['fuel', 'shift'])
+    X_encoded_df_fuel_shift = pd.DataFrame(X_encoded_fuel_shift, columns=encoded_cols_fuel_shift)
 
-    # Concatenar con columnas numéricas (sin 'is_professional')
-    X_final = pd.concat([input_df[['year', 'kms', 'power', 'doors']].reset_index(drop=True),
-                         X_encoded_df.reset_index(drop=True)], axis=1)
+    X_encoded_make_model = encoder_make_model.transform(input_df[['make', 'model']])
+    encoded_cols_make_model = encoder_make_model.get_feature_names_out(['make', 'model'])
+    X_encoded_df_make_model = pd.DataFrame(X_encoded_make_model, columns=encoded_cols_make_model)
 
-    # Asegurarse de que las columnas estén en el mismo orden que las columnas del modelo
-    final_column_order = encoder.get_feature_names_out(categorical_columns).tolist() + ['year', 'kms', 'power', 'doors']
-    X_final = X_final[final_column_order]
+    # Concatenar todo
+    X_final = pd.concat([
+        input_df[numerical_cols].reset_index(drop=True),
+        X_encoded_df_make_model.reset_index(drop=True),
+        X_encoded_df_fuel_shift.reset_index(drop=True)
+    ], axis=1)
 
-    # Predecir el precio
+    # Predecir
     predicted_price = model.predict(X_final)[0]
-
     return predicted_price
-
-# Ejemplo de uso
-input_data = {
-    'make': 'BMW',
-    'model': 'X5',
-    'fuel': 'Diesel',
-    'year': 2020,
-    'kms': 50000,
-    'power': 250,
-    'doors': 5,
-    'shift': 'Automatic'
-}
-
-# Obtener el precio estimado
-predicted_price = predict_price(input_data)
-print(f"💰 Precio estimado: {predicted_price:.2f} €")
