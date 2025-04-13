@@ -1,0 +1,36 @@
+/prediccion_coches
+│
+├── android/                # Código específico de Android
+├── ios/                    # Código específico de iOS
+├── lib/                    # Código fuente de Flutter
+│   ├── models/             # Modelos de datos y funciones de comunicación
+│   │   ├── coche_model.dart  # Estructura del modelo de coche
+│   │   └── api_service.dart   # Comunicación con la API en Python
+│   │
+│   ├── screens/            # Pantallas de la app
+│   │   ├── home_screen.dart # Pantalla principal
+│   │   ├── prediction_screen.dart # Pantalla para la predicción de precios
+│   │   └── results_screen.dart # Pantalla de resultados
+│   │
+│   ├── widgets/            # Componentes reutilizables de la UI
+│   │   └── custom_button.dart  # Ejemplo de un botón personalizado
+│   │
+│   ├── services/           # Lógica de negocio o comunicación con APIs
+│   │   └── model_service.dart # Lógica para obtener predicción desde la API
+│   │
+│   ├── utils/              # Utilidades generales
+│   │   └── constants.dart   # Constantes de la app
+│   │
+│   ├── main.dart           # Punto de entrada de la aplicación
+│
+├── python_backend/        # Código fuente de la API en Python
+│   ├── app.py             # Servidor Flask o FastAPI
+│   ├── model.py           # Lógica del modelo de predicción
+│   └── requirements.txt  # Dependencias de Python
+│
+├── assets/                  # Archivos estáticos como imágenes o datos
+│   └── data/                # Datos para entrenamiento o pruebas (si es necesario)
+│
+├── pubspec.yaml             # Archivo de configuración de dependencias de Flutter
+├── README.md                # Descripción del proyecto
+└── requirements.txt        # Dependencias de Python
