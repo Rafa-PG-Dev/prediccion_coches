@@ -34,3 +34,21 @@
 ├── pubspec.yaml             # Archivo de configuración de dependencias de Flutter
 ├── README.md                # Descripción del proyecto
 └── requirements.txt        # Dependencias de Python
+
+
+
+
+lib/
+  ├── main.dart                # Entrada principal de la aplicación
+  ├── screens/                 # Pantallas principales de la aplicación
+  │    ├── home_screen.dart    # Pantalla principal (por ejemplo, para ingresar datos del coche)
+  │    ├── result_screen.dart  # Pantalla para mostrar el precio predicho
+  ├── widgets/                 # Widgets reutilizables en toda la aplicación
+  │    ├── input_form.dart     # Formulario para ingresar datos del coche
+  │    ├── prediction_result.dart  # Widget para mostrar el resultado
+  ├── services/                # Servicios de backend (para hacer solicitudes HTTP)
+  │    ├── api_service.dart    # Servicio para la interacción con la API de Flask
+  ├── models/                  # Modelos de datos
+  │    ├── car.dart            # Modelo para los datos de entrada del coche
+  └── utils/                   # Utilidades generales
+       └── constants.dart      # Constantes (por ejemplo, URL de la API)
