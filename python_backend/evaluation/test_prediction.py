@@ -1,5 +1,6 @@
 import pickle
 import pandas as pd
+import xgboost as xgb
 
 # Cargar el modelo y los encoders
 try:
@@ -22,8 +23,8 @@ numeric_features = ['year', 'kms', 'power', 'doors']
 
 # Datos de prueba (un coche con ciertos datos)
 test_data = {
-    "make": "toyota",
-    "model": "corolla",
+    "make": "bmw",
+    "model": "x5",
     "fuel": "gasoline",
     "year": 2015,
     "kms": 80000,
@@ -44,6 +45,13 @@ X_encoded_fuel_shift = encoder_fuel_shift.transform(df_input[['fuel', 'shift']])
 encoded_columns_fuel_shift = encoder_fuel_shift.get_feature_names_out(['fuel', 'shift'])
 X_encoded_df_fuel_shift = pd.DataFrame(X_encoded_fuel_shift, columns=encoded_columns_fuel_shift)
 
+# Depuración: Imprime las características codificadas para ver cómo están transformándose
+print("Características codificadas para make y model:")
+print(X_encoded_df_make_model)
+
+print("Características codificadas para fuel y shift:")
+print(X_encoded_df_fuel_shift)
+
 # Concatenar las columnas codificadas con las numéricas
 final_input = pd.concat([ 
     df_input[numeric_features].reset_index(drop=True),
@@ -51,8 +59,18 @@ final_input = pd.concat([
     X_encoded_df_fuel_shift.reset_index(drop=True)
 ], axis=1)
 
-# Predicción
-prediction = model.predict(final_input)
+# Imprimir los datos finales que serán ingresados al modelo
+print("Datos finales para la predicción:")
+print(final_input)
 
-# Imprimir el resultado
-print(f"Predicción para el coche de prueba: {prediction[0]}")
+# Convertir a DMatrix para XGBoost
+dtest = xgb.DMatrix(final_input)
+
+# Realizar la predicción
+prediction = model.predict(dtest)
+
+# Convertir la predicción a un valor flotante y redondear
+predicted_price = round(float(prediction[0]), 2)
+
+# Imprimir el resultado redondeado
+print(f"Predicción para el coche de prueba: {predicted_price}")

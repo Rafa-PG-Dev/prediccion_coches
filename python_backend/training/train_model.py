@@ -1,9 +1,9 @@
 import pandas as pd
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
-import pickle
 import os
+import xgboost as xgb
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder
+import pickle
 
 # ===============================
 # 1. Cargar los datos
@@ -59,10 +59,22 @@ X_final = pd.concat([
 X_train, X_test, y_train, y_test = train_test_split(X_final, y, test_size=0.2, random_state=42)
 
 # ===============================
-# 8. Entrenar el modelo
+# 8. Entrenar el modelo (XGBoost en vez de RandomForest)
 # ===============================
-model = RandomForestRegressor(n_estimators=100, random_state=42)
-model.fit(X_train, y_train)
+dtrain = xgb.DMatrix(X_train, label=y_train)
+dtest = xgb.DMatrix(X_test)
+
+# Parámetros de XGBoost
+params = {
+    'objective': 'reg:squarederror',  # Problema de regresión
+    'eval_metric': 'mae',  # Métrica para evaluación
+    'max_depth': 6,  # Profundidad del árbol
+    'learning_rate': 0.1,  # Tasa de aprendizaje
+    'n_estimators': 100  # Número de árboles
+}
+
+# Entrenamos el modelo
+model = xgb.train(params, dtrain, num_boost_round=100)
 
 # ===============================
 # 9. Guardar el modelo y el encoder

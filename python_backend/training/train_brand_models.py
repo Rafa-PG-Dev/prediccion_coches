@@ -1,8 +1,8 @@
 import pandas as pd
 import os
 import pickle
+import xgboost as xgb
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import OneHotEncoder
 
 # Configuración
@@ -32,17 +32,32 @@ X_encoded = encoder.fit_transform(X[categorical_features])
 encoded_columns = encoder.get_feature_names_out(categorical_features)
 X_encoded_df = pd.DataFrame(X_encoded, columns=encoded_columns)
 
-X_final = pd.concat([
-    X_encoded_df.reset_index(drop=True),
-    X[['year', 'kms', 'power', 'doors']].reset_index(drop=True)
-], axis=1)
+X_final = pd.concat([X_encoded_df.reset_index(drop=True),
+                     X[['year', 'kms', 'power', 'doors']].reset_index(drop=True)], axis=1)
 
 X_train, X_test, y_train, y_test = train_test_split(X_final, y, test_size=0.2, random_state=42)
 
-model = RandomForestRegressor(n_estimators=100, random_state=42)
-model.fit(X_train, y_train)
-y_pred = model.predict(X_test)
+# 1.1 Modelo XGBoost general
+params = {
+    'objective': 'reg:squarederror',  # Tarea de regresión
+    'eval_metric': 'rmse',  # Métrica de evaluación
+    'max_depth': 6,  # Profundidad máxima de los árboles
+    'eta': 0.1,  # Tasa de aprendizaje
+    'nthread': 4,  # Número de hilos para paralelizar
+}
 
+# Convertir datos a DMatrix
+dtrain = xgb.DMatrix(X_train, label=y_train)
+dtest = xgb.DMatrix(X_test, label=y_test)
+
+# Entrenar el modelo XGBoost
+num_round = 100  # Número de iteraciones (árboles)
+model = xgb.train(params, dtrain, num_round)
+
+# Realizar predicciones para calcular el error
+y_pred = model.predict(dtest)
+
+# Calcular el error absoluto (MAE)
 X_test['make'] = X.loc[X_test.index, 'make']
 X_test['error_abs'] = abs(y_pred - y_test.values)
 mae_by_make = X_test.groupby('make')['error_abs'].mean()
@@ -68,15 +83,16 @@ for brand in high_error_brands:
     encoded_columns_b = encoder_b.get_feature_names_out(categorical_features)
     Xb_encoded_df = pd.DataFrame(Xb_encoded, columns=encoded_columns_b)
 
-    Xb_final = pd.concat([
-        Xb_encoded_df.reset_index(drop=True),
-        Xb[['year', 'kms', 'power', 'doors']].reset_index(drop=True)
-    ], axis=1)
+    Xb_final = pd.concat([Xb_encoded_df.reset_index(drop=True),
+                          Xb[['year', 'kms', 'power', 'doors']].reset_index(drop=True)], axis=1)
 
     Xb_train, Xb_test, yb_train, yb_test = train_test_split(Xb_final, yb, test_size=0.2, random_state=42)
 
-    model_b = RandomForestRegressor(n_estimators=100, random_state=42)
-    model_b.fit(Xb_train, yb_train)
+    # 3.1 Modelo XGBoost para cada marca
+    dtrain_b = xgb.DMatrix(Xb_train, label=yb_train)
+    dtest_b = xgb.DMatrix(Xb_test, label=yb_test)
+
+    model_b = xgb.train(params, dtrain_b, num_round)
 
     # Guardar modelo y encoder
     model_file = os.path.join(MODELS_PATH, f"model_{brand}.pkl")

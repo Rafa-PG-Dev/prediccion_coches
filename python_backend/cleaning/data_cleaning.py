@@ -36,6 +36,20 @@ def clean_data(file_path, output_path):
     df = df[df['power'] > 0]  # Eliminar coches sin potencia (0 o menos)
     df = df[df['doors'] > 0]  # Eliminar coches con número de puertas inválido
 
+    # Lista de marcas a eliminar por tener pocos registros
+    brands_to_remove = [
+        'PORSCHE', 'MAZDA', 'HONDA', 'JAGUAR', 'MITSUBISHI', 'JEEP', 'LEXUS', 'DACIA', 
+        'ALFA ROMEO', 'SUZUKI', 'SSANGYONG', 'SMART', 'CHEVROLET', 'DS', 'ABARTH', 
+        'SUBARU', 'CHRYSLER', 'INFINITI', 'MASERATI', 'LANCIA', 'IVECO', 'SAAB', 'FERRARI', 
+        'DAEWOO', 'BENTLEY', 'DODGE', 'TESLA', 'ROVER', 'ASTON MARTIN', 'CUPRA', 'CADILLAC', 
+        'MAHINDRA', 'TATA', 'DFSK', 'LAMBORGHINI', 'ISUZU', 'GALLOPER', 'MG', 'SANTANA', 
+        'CORVETTE', 'HUMMER', 'PONTIAC', 'DR AUTOMOBILES', 'ALPINE', 'LOTUS', 'DAIHATSU', 
+        'UMM', 'AUSTIN', 'MAXUS', 'PIAGGIO', 'IVECO-PEGASO', 'LDV'
+    ]
+    
+    # Filtrar el DataFrame eliminando las marcas que están en la lista
+    df = df[~df['make'].isin(brands_to_remove)]
+
     # Guardar el DataFrame limpio en el archivo de salida
     df.to_csv(output_path, index=False)
     print(f"✅ CSV limpio guardado en: {output_path}")
