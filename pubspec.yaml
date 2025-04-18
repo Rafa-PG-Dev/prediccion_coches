@@ -30,3 +30,4 @@ flutter:
       - assets/coches_data.csv
       - assets/coches_data_cleaned.csv  
       - assets/images/car_logo.png
+      - assets/coches_por_marca.json

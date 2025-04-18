@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/car.dart';
 import '../services/api_service.dart';
 import 'result_screen.dart'; // Para navegar a la pantalla de resultados
+import 'dart:convert'; // Para cargar las marcas y modelos desde el archivo JSON
 
 class CarFormScreen extends StatefulWidget {
   const CarFormScreen({super.key});
@@ -25,6 +26,34 @@ class _CarFormScreenState extends State<CarFormScreen> {
 
   final List<String> fuels = ['gasolina', 'diésel', 'eléctrico', 'híbrido'];
   final List<String> shifts = ['manual', 'automático'];
+
+  Map<String, List<String>> brandsAndModels = {}; // Para almacenar marcas y modelos
+
+  String? selectedBrand; // Marca seleccionada
+  String? selectedModel; // Modelo seleccionado
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBrandsAndModels(); // Cargar marcas y modelos al iniciar la pantalla
+  }
+
+  // Cargar las marcas y modelos desde un archivo JSON
+  Future<void> _loadBrandsAndModels() async {
+    // Simulando la carga de datos, idealmente esto se haría con un archivo JSON
+    String jsonString = await DefaultAssetBundle.of(context).loadString('assets/coches_por_marca.json');
+    final Map<String, dynamic> data = json.decode(jsonString);
+
+    // Asegurarse de convertir los modelos a List<String>
+    final Map<String, List<String>> parsedData = {};
+    data.forEach((key, value) {
+      parsedData[key] = List<String>.from(value); // Convertir a List<String>
+    });
+
+    setState(() {
+      brandsAndModels = parsedData; // Asignar datos correctamente tipados
+    });
+  }
 
   // Validación para campos numéricos
   String? validateNumber(String? value) {
@@ -103,14 +132,35 @@ class _CarFormScreenState extends State<CarFormScreen> {
               key: _formKey,
               child: Column(
                 children: [
-                  buildTextField('Marca', (val) => make = val!),
-                  buildTextField('Modelo', (val) => model = val!),
+                  // Dropdown de Marca
+                  buildDropdown('Marca', brandsAndModels.keys.toList(), selectedBrand, (val) {
+                    setState(() {
+                      selectedBrand = val;
+                      selectedModel = null; // Limpiar el modelo cuando cambie la marca
+                    });
+                  }),
+
+                  // Dropdown de Modelo, solo habilitado si se selecciona una marca
+                  if (selectedBrand != null) 
+                    buildDropdown(
+                      'Modelo',
+                      brandsAndModels[selectedBrand] ?? [],
+                      selectedModel, 
+                      (val) {
+                        setState(() {
+                          selectedModel = val;
+                        });
+                      },
+                    ),
+
+                  // Los otros campos del formulario
                   buildDropdown('Combustible', fuels, fuel, (val) => setState(() => fuel = val!)),
                   buildDropdown('Transmisión', shifts, shift, (val) => setState(() => shift = val!)),
                   buildNumberField('Año', (val) => year = int.parse(val!)),
                   buildNumberField('Kilómetros', (val) => kms = int.parse(val!)),
                   buildNumberField('Potencia (CV)', (val) => power = int.parse(val!)),
                   buildNumberField('Puertas', (val) => doors = int.parse(val!)),
+
                   const SizedBox(height: 20),
                   _isLoading
                       ? const CircularProgressIndicator()
@@ -133,21 +183,6 @@ class _CarFormScreenState extends State<CarFormScreen> {
     );
   }
 
-  // Método para construir campos de texto (marca, modelo)
-  Widget buildTextField(String label, Function(String?) onSaved) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: TextFormField(
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-        ),
-        validator: (value) => value == null || value.isEmpty ? 'Campo requerido' : null,
-        onSaved: (value) => onSaved(value),
-      ),
-    );
-  }
-
   // Método para construir campos numéricos (año, kilómetros, potencia, puertas)
   Widget buildNumberField(String label, Function(String?) onSaved) {
     return Padding(
@@ -164,8 +199,8 @@ class _CarFormScreenState extends State<CarFormScreen> {
     );
   }
 
-  // Método para construir los dropdowns (combustible y transmisión)
-  Widget buildDropdown(String label, List<String> items, String value, Function(String?) onChanged) {
+  // Método para construir los dropdowns (combustible, transmisión, marca, modelo)
+  Widget buildDropdown(String label, List<String> items, String? value, Function(String?) onChanged) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: DropdownButtonFormField<String>(
