@@ -19,16 +19,21 @@ class Car {
     this.shift = '',
   });
 
+  String capitalize(String input) {
+    if (input.isEmpty) return input;
+    return input[0].toUpperCase() + input.substring(1).toLowerCase();
+  }
+
   Map<String, dynamic> toJson() {
     return {
-      'make': make.toLowerCase(),
-      'model': model.toLowerCase(),
-      'fuel': fuel.toLowerCase(),
+      'make': make.toUpperCase(),      
+      'model': model,                  
+      'fuel': capitalize(fuel),        
       'year': year,
       'kms': kms,
       'power': power,
       'doors': doors,
-      'shift': shift.toLowerCase(),
+      'shift': capitalize(shift),      
     };
   }
 }

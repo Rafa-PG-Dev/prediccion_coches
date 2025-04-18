@@ -42,7 +42,7 @@ class ResultScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  "\$${predictedPrice.toStringAsFixed(2)}",
+                  "${predictedPrice.toStringAsFixed(2)} €",
                   style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,

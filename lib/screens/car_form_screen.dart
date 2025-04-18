@@ -16,8 +16,8 @@ class _CarFormScreenState extends State<CarFormScreen> {
   final _formKey = GlobalKey<FormState>();
   String make = '';
   String model = '';
-  String fuel = 'gasoline';
-  String shift = 'manual';
+  String fuel = 'Gasoline';
+  String shift = 'Manual';
   int year = 0;
   int kms = 0;
   int power = 0;
@@ -25,8 +25,8 @@ class _CarFormScreenState extends State<CarFormScreen> {
 
   bool _isLoading = false;
 
-  final List<String> fuels = ['gasoline', 'diesel', 'electric', 'hybrid'];
-  final List<String> shifts = ['manual', 'automatic'];
+  final List<String> fuels = ['Gasoline', 'Diesel', 'Electric', 'Hybrid'];
+  final List<String> shifts = ['Manual', 'Automatic'];
 
   String? validateNumber(String? value) {
     if (value == null || value.isEmpty) return 'Campo requerido';
