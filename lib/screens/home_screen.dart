@@ -2,10 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../widgets/input_form.dart'; // Importamos la pantalla del formulario
+import '../screens/car_form_screen.dart'; // Importa CarFormScreen en lugar de InputForm
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -46,10 +46,10 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 40),
             ElevatedButton.icon(
               onPressed: () {
-                // Navegar a InputForm (Formulario)
+                // Navegar a CarFormScreen (Formulario)
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const InputForm()),
+                  MaterialPageRoute(builder: (context) => const CarFormScreen()), // Cambiar a CarFormScreen
                 );
               },
               icon: const Icon(Icons.arrow_forward_outlined),

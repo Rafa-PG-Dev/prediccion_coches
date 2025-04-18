@@ -1,12 +1,10 @@
-// screens/car_form_screen.dart
-
 import 'package:flutter/material.dart';
 import '../models/car.dart';
 import '../services/api_service.dart';
-import '../screens/result_screen.dart'; // Para navegar a la pantalla de resultados
+import 'result_screen.dart'; // Para navegar a la pantalla de resultados
 
 class CarFormScreen extends StatefulWidget {
-  const CarFormScreen({Key? key}) : super(key: key);
+  const CarFormScreen({super.key});
 
   @override
   _CarFormScreenState createState() => _CarFormScreenState();
@@ -16,8 +14,8 @@ class _CarFormScreenState extends State<CarFormScreen> {
   final _formKey = GlobalKey<FormState>();
   String make = '';
   String model = '';
-  String fuel = 'Gasoline';
-  String shift = 'Manual';
+  String fuel = 'gasolina'; // Valor por defecto
+  String shift = 'manual'; // Valor por defecto
   int year = 0;
   int kms = 0;
   int power = 0;
@@ -25,9 +23,10 @@ class _CarFormScreenState extends State<CarFormScreen> {
 
   bool _isLoading = false;
 
-  final List<String> fuels = ['Gasoline', 'Diesel', 'Electric', 'Hybrid'];
-  final List<String> shifts = ['Manual', 'Automatic'];
+  final List<String> fuels = ['gasolina', 'diésel', 'eléctrico', 'híbrido'];
+  final List<String> shifts = ['manual', 'automático'];
 
+  // Validación para campos numéricos
   String? validateNumber(String? value) {
     if (value == null || value.isEmpty) return 'Campo requerido';
     final number = int.tryParse(value);
@@ -35,6 +34,7 @@ class _CarFormScreenState extends State<CarFormScreen> {
     return null;
   }
 
+  // Método para enviar los datos y obtener el precio estimado
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -81,6 +81,7 @@ class _CarFormScreenState extends State<CarFormScreen> {
     }
   }
 
+  // Método de construcción del formulario
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,14 +103,14 @@ class _CarFormScreenState extends State<CarFormScreen> {
               key: _formKey,
               child: Column(
                 children: [
-                  buildTextField('Marca', (val) => make = val),
-                  buildTextField('Modelo', (val) => model = val),
-                  buildDropdown('Combustible', fuels, fuel, (val) => fuel = val!),
-                  buildDropdown('Transmisión', shifts, shift, (val) => shift = val!),
-                  buildNumberField('Año', (val) => year = int.parse(val)),
-                  buildNumberField('Kilómetros', (val) => kms = int.parse(val)),
-                  buildNumberField('Potencia (CV)', (val) => power = int.parse(val)),
-                  buildNumberField('Puertas', (val) => doors = int.parse(val)),
+                  buildTextField('Marca', (val) => make = val!),
+                  buildTextField('Modelo', (val) => model = val!),
+                  buildDropdown('Combustible', fuels, fuel, (val) => setState(() => fuel = val!)),
+                  buildDropdown('Transmisión', shifts, shift, (val) => setState(() => shift = val!)),
+                  buildNumberField('Año', (val) => year = int.parse(val!)),
+                  buildNumberField('Kilómetros', (val) => kms = int.parse(val!)),
+                  buildNumberField('Potencia (CV)', (val) => power = int.parse(val!)),
+                  buildNumberField('Puertas', (val) => doors = int.parse(val!)),
                   const SizedBox(height: 20),
                   _isLoading
                       ? const CircularProgressIndicator()
@@ -132,7 +133,8 @@ class _CarFormScreenState extends State<CarFormScreen> {
     );
   }
 
-  Widget buildTextField(String label, Function(String) onSaved) {
+  // Método para construir campos de texto (marca, modelo)
+  Widget buildTextField(String label, Function(String?) onSaved) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: TextFormField(
@@ -141,12 +143,13 @@ class _CarFormScreenState extends State<CarFormScreen> {
           border: const OutlineInputBorder(),
         ),
         validator: (value) => value == null || value.isEmpty ? 'Campo requerido' : null,
-        onSaved: (value) => onSaved(value!),
+        onSaved: (value) => onSaved(value),
       ),
     );
   }
 
-  Widget buildNumberField(String label, Function(String) onSaved) {
+  // Método para construir campos numéricos (año, kilómetros, potencia, puertas)
+  Widget buildNumberField(String label, Function(String?) onSaved) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: TextFormField(
@@ -156,11 +159,12 @@ class _CarFormScreenState extends State<CarFormScreen> {
         ),
         keyboardType: TextInputType.number,
         validator: validateNumber,
-        onSaved: (value) => onSaved(value!),
+        onSaved: (value) => onSaved(value),
       ),
     );
   }
 
+  // Método para construir los dropdowns (combustible y transmisión)
   Widget buildDropdown(String label, List<String> items, String value, Function(String?) onChanged) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),

@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 class ResultScreen extends StatelessWidget {
   final double predictedPrice;
 
-  const ResultScreen({Key? key, required this.predictedPrice}) : super(key: key);
+  const ResultScreen({super.key, required this.predictedPrice});
 
   @override
   Widget build(BuildContext context) {
