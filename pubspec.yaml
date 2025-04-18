@@ -29,5 +29,4 @@ flutter:
   assets:
       - assets/coches_data.csv
       - assets/coches_data_cleaned.csv  
-      - assets/images/car_logo.png  
-      - assets/animations/success_animation.json
+      - assets/images/car_logo.png

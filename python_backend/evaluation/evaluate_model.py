@@ -1,10 +1,14 @@
 import pandas as pd
 import pickle
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-import os
 import xgboost as xgb
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.model_selection import train_test_split
+import os
+
 # ===============================
-# 1. Cargar el modelo y encoders
+# 1. Cargar el modelo y los encoders
 # ===============================
 with open('assets/model.pkl', 'rb') as f:
     model = pickle.load(f)
@@ -43,8 +47,6 @@ X_final = pd.concat([
 # ===============================
 # 4. Evaluar el modelo
 # ===============================
-from sklearn.model_selection import train_test_split
-
 # Dividir en conjunto de entrenamiento y prueba
 X_train, X_test, y_train, y_test = train_test_split(X_final, y, test_size=0.2, random_state=42)
 
@@ -64,41 +66,77 @@ print(f"📉 MSE: {mse:.2f}")
 print(f"📈 R² Score: {r2:.4f}")
 
 # ===============================
-# 5. Evaluación por marca
+# 5. Visualizar los resultados
 # ===============================
-# Añadir la columna 'make' a X_test para evaluar el error por marca
+
+# Gráfico de la distribución de los errores
+plt.figure(figsize=(10, 6))
+errors = y_pred - y_test
+sns.histplot(errors, kde=True, color='blue', bins=30)
+plt.title('Distribución de los Errores de Predicción')
+plt.xlabel('Error de Predicción')
+plt.ylabel('Frecuencia')
+plt.grid(True)
+plt.show()
+
+# Gráfico de los precios reales vs los predichos
+plt.figure(figsize=(10, 6))
+plt.scatter(y_test, y_pred, alpha=0.6, color='purple')
+plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], color='red', lw=2)  # Línea de igualdad
+plt.title('Precio Real vs Precio Predicho')
+plt.xlabel('Precio Real')
+plt.ylabel('Precio Predicho')
+plt.grid(True)
+plt.show()
+
+# Gráfico de error absoluto por marca
 X_test['make'] = X.loc[X_test.index, 'make']
 X_test['error_abs'] = abs(y_pred - y_test.values)
 
-# Calcular el MAE por marca
-mae_by_make = X_test.groupby('make')['error_abs'].mean()
+mae_by_make = X_test.groupby('make')['error_abs'].mean().sort_values()
 
-# Mostrar el MAE por marca
-print("📊 MAE por marca:")
-print(mae_by_make)
-
-# Definir umbral de MAE alto para marcas que requieren evaluación adicional
-MAE_THRESHOLD = 8000
-high_error_brands = mae_by_make[mae_by_make > MAE_THRESHOLD].index.tolist()
-
-print(f"\n🧠 Marcas con error alto ({MAE_THRESHOLD}): {high_error_brands}")
+plt.figure(figsize=(12, 8))
+mae_by_make.plot(kind='barh', color='salmon')
+plt.title('Error Absoluto Medio (MAE) por Marca')
+plt.xlabel('MAE')
+plt.ylabel('Marca')
+plt.grid(True)
+plt.show()
 
 # ===============================
-# 6. Guardar resultados de evaluación
+# 6. Guardar los resultados gráficos
 # ===============================
 os.makedirs('assets/evaluation_results', exist_ok=True)
 
-# Guardar los resultados generales de la evaluación
+# Guardar los gráficos generados
+plt.figure(figsize=(10, 6))
+sns.histplot(errors, kde=True, color='blue', bins=30)
+plt.title('Distribución de los Errores de Predicción')
+plt.xlabel('Error de Predicción')
+plt.ylabel('Frecuencia')
+plt.grid(True)
+plt.savefig('assets/evaluation_results/error_distribution.png')
+
+plt.figure(figsize=(10, 6))
+plt.scatter(y_test, y_pred, alpha=0.6, color='purple')
+plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], color='red', lw=2)
+plt.title('Precio Real vs Precio Predicho')
+plt.xlabel('Precio Real')
+plt.ylabel('Precio Predicho')
+plt.grid(True)
+plt.savefig('assets/evaluation_results/real_vs_predicted.png')
+
+mae_by_make.plot(kind='barh', color='salmon', figsize=(12, 8))
+plt.title('Error Absoluto Medio (MAE) por Marca')
+plt.xlabel('MAE')
+plt.ylabel('Marca')
+plt.grid(True)
+plt.savefig('assets/evaluation_results/mae_by_make.png')
+
+# Guardar resultados generales de la evaluación
 with open('assets/evaluation_results/general_evaluation.txt', 'w') as f:
     f.write(f"📉 MAE: {mae:.2f}\n")
     f.write(f"📉 MSE: {mse:.2f}\n")
     f.write(f"📈 R² Score: {r2:.4f}\n")
 
-# Guardar los MAE por marca
-mae_by_make.to_csv('assets/evaluation_results/mae_by_make.csv')
-
-# Guardar las marcas con error alto
-with open('assets/evaluation_results/high_error_brands.txt', 'w') as f:
-    f.write("\n".join(high_error_brands))
-
-print("✅ Resultados de evaluación guardados correctamente.")
+print("✅ Resultados gráficos y de evaluación guardados correctamente.")
