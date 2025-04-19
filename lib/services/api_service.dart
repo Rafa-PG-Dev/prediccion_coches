@@ -1,6 +1,7 @@
 // services/api_service.dart
 
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
 import '../models/car.dart';
 import '../utils/constants.dart';
@@ -27,7 +28,7 @@ class ApiService {
         throw Exception('Error al obtener el precio. Código: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error al conectar con la API: $e');
+      developer.log('Error al conectar con la API', error: e);
       throw Exception('Error de conexión con la API: $e');
     }
   }

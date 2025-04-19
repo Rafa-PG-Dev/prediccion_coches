@@ -1,61 +1,63 @@
 import 'package:flutter/material.dart';
 import '../models/car.dart';
 import '../services/api_service.dart';
-import 'result_screen.dart'; // Para navegar a la pantalla de resultados
-import 'dart:convert'; // Para cargar las marcas y modelos desde el archivo JSON
+import 'result_screen.dart';
+import 'dart:convert';
 
 class CarFormScreen extends StatefulWidget {
   const CarFormScreen({super.key});
 
   @override
-  _CarFormScreenState createState() => _CarFormScreenState();
+  CarFormScreenState createState() => CarFormScreenState();
 }
 
-class _CarFormScreenState extends State<CarFormScreen> {
+// ¡Clase pública! No debe comenzar con guion bajo
+class CarFormScreenState extends State<CarFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  String make = '';
-  String model = '';
-  String fuel = 'gasolina'; // Valor por defecto
-  String shift = 'manual'; // Valor por defecto
+
+  String fuel = 'gasolina';
+  String shift = 'manual';
   int year = 0;
   int kms = 0;
   int power = 0;
   int doors = 0;
 
   bool _isLoading = false;
+  bool _dataLoaded = false;
 
   final List<String> fuels = ['gasolina', 'diésel', 'eléctrico', 'híbrido'];
   final List<String> shifts = ['manual', 'automático'];
 
-  Map<String, List<String>> brandsAndModels = {}; // Para almacenar marcas y modelos
-
-  String? selectedBrand; // Marca seleccionada
-  String? selectedModel; // Modelo seleccionado
+  Map<String, List<String>> brandsAndModels = {};
+  String? selectedBrand;
+  String? selectedModel;
 
   @override
   void initState() {
     super.initState();
-    _loadBrandsAndModels(); // Cargar marcas y modelos al iniciar la pantalla
+    _loadBrandsAndModels();
   }
 
-  // Cargar las marcas y modelos desde un archivo JSON
   Future<void> _loadBrandsAndModels() async {
-    // Simulando la carga de datos, idealmente esto se haría con un archivo JSON
-    String jsonString = await DefaultAssetBundle.of(context).loadString('assets/coches_por_marca.json');
-    final Map<String, dynamic> data = json.decode(jsonString);
+    try {
+      String jsonString = await DefaultAssetBundle.of(context)
+          .loadString('assets/coches_por_marca.json');
+      final Map<String, dynamic> data = json.decode(jsonString);
 
-    // Asegurarse de convertir los modelos a List<String>
-    final Map<String, List<String>> parsedData = {};
-    data.forEach((key, value) {
-      parsedData[key] = List<String>.from(value); // Convertir a List<String>
-    });
+      final Map<String, List<String>> parsedData = {};
+      data.forEach((key, value) {
+        parsedData[key] = List<String>.from(value);
+      });
 
-    setState(() {
-      brandsAndModels = parsedData; // Asignar datos correctamente tipados
-    });
+      setState(() {
+        brandsAndModels = parsedData;
+        _dataLoaded = true;
+      });
+    } catch (e) {
+      debugPrint('Error cargando marcas y modelos: $e');
+    }
   }
 
-  // Validación para campos numéricos
   String? validateNumber(String? value) {
     if (value == null || value.isEmpty) return 'Campo requerido';
     final number = int.tryParse(value);
@@ -63,7 +65,6 @@ class _CarFormScreenState extends State<CarFormScreen> {
     return null;
   }
 
-  // Método para enviar los datos y obtener el precio estimado
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -74,8 +75,8 @@ class _CarFormScreenState extends State<CarFormScreen> {
     });
 
     final car = Car(
-      make: make,
-      model: model,
+      make: selectedBrand ?? '',
+      model: selectedModel ?? '',
       fuel: fuel,
       shift: shift,
       year: year,
@@ -85,12 +86,10 @@ class _CarFormScreenState extends State<CarFormScreen> {
     );
 
     try {
-      // Obtener el precio estimado de la API
       double predictedPrice = await ApiService.predictPrice(car);
 
       if (!mounted) return;
 
-      // Navegar a ResultScreen pasando el precio calculado
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -99,7 +98,6 @@ class _CarFormScreenState extends State<CarFormScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      // Mostrar mensaje de error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: ${e.toString()}')),
       );
@@ -110,16 +108,21 @@ class _CarFormScreenState extends State<CarFormScreen> {
     }
   }
 
-  // Método de construcción del formulario
   @override
   Widget build(BuildContext context) {
+    if (!_dataLoaded) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Formulario de Coche'),
         centerTitle: true,
         backgroundColor: Colors.deepPurple,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
@@ -132,35 +135,34 @@ class _CarFormScreenState extends State<CarFormScreen> {
               key: _formKey,
               child: Column(
                 children: [
-                  // Dropdown de Marca
-                  buildDropdown('Marca', brandsAndModels.keys.toList(), selectedBrand, (val) {
-                    setState(() {
-                      selectedBrand = val;
-                      selectedModel = null; // Limpiar el modelo cuando cambie la marca
-                    });
-                  }),
-
-                  // Dropdown de Modelo, solo habilitado si se selecciona una marca
-                  if (selectedBrand != null) 
+                  buildDropdown(
+                    'Marca',
+                    brandsAndModels.keys.toList(),
+                    selectedBrand,
+                    (val) {
+                      setState(() {
+                        selectedBrand = val;
+                        selectedModel = null;
+                      });
+                    },
+                  ),
+                  if (selectedBrand != null)
                     buildDropdown(
                       'Modelo',
                       brandsAndModels[selectedBrand] ?? [],
-                      selectedModel, 
-                      (val) {
-                        setState(() {
-                          selectedModel = val;
-                        });
-                      },
+                      selectedModel,
+                      (val) => setState(() => selectedModel = val),
                     ),
-
-                  // Los otros campos del formulario
-                  buildDropdown('Combustible', fuels, fuel, (val) => setState(() => fuel = val!)),
-                  buildDropdown('Transmisión', shifts, shift, (val) => setState(() => shift = val!)),
+                  buildDropdown('Combustible', fuels, fuel, (val) {
+                    setState(() => fuel = val!);
+                  }),
+                  buildDropdown('Transmisión', shifts, shift, (val) {
+                    setState(() => shift = val!);
+                  }),
                   buildNumberField('Año', (val) => year = int.parse(val!)),
                   buildNumberField('Kilómetros', (val) => kms = int.parse(val!)),
                   buildNumberField('Potencia (CV)', (val) => power = int.parse(val!)),
                   buildNumberField('Puertas', (val) => doors = int.parse(val!)),
-
                   const SizedBox(height: 20),
                   _isLoading
                       ? const CircularProgressIndicator()
@@ -183,7 +185,6 @@ class _CarFormScreenState extends State<CarFormScreen> {
     );
   }
 
-  // Método para construir campos numéricos (año, kilómetros, potencia, puertas)
   Widget buildNumberField(String label, Function(String?) onSaved) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -199,7 +200,6 @@ class _CarFormScreenState extends State<CarFormScreen> {
     );
   }
 
-  // Método para construir los dropdowns (combustible, transmisión, marca, modelo)
   Widget buildDropdown(String label, List<String> items, String? value, Function(String?) onChanged) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -209,7 +209,9 @@ class _CarFormScreenState extends State<CarFormScreen> {
           border: const OutlineInputBorder(),
         ),
         value: value,
-        items: items.map((val) => DropdownMenuItem(value: val, child: Text(val))).toList(),
+        items: items.map((val) {
+          return DropdownMenuItem(value: val, child: Text(val));
+        }).toList(),
         onChanged: onChanged,
         validator: (val) => val == null ? 'Campo requerido' : null,
       ),
