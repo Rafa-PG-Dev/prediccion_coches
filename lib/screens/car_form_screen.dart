@@ -118,7 +118,12 @@ class CarFormScreenState extends State<CarFormScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Formulario de Coche'),
+        title: const Text('ValoraCar'),
+        titleTextStyle: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
         centerTitle: true,
         backgroundColor: Colors.deepPurple,
       ),

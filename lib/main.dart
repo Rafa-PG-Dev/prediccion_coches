@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Predicción de Coches',
+      title: 'ValoraCar',
       theme: ThemeData(primarySwatch: Colors.deepPurple),
       home: const HomeScreen(), // Pantalla inicialm
     );
