@@ -11,7 +11,7 @@ class ResultScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Predicción de Precio'),
+        title: const Text('ValoraCar'),
         centerTitle: true,
         backgroundColor: Colors.deepPurpleAccent,
       ),
